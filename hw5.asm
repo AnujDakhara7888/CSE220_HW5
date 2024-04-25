@@ -59,9 +59,9 @@ init_student_array:
 
 	lw $t6 0($sp) # storing the record in a variable
 	
-	addi $sp, $sp, -4 # making a stack before calling
-	
 	move $t5 $a3 # loading the name
+	
+	addi $sp, $sp, -4 # making a stack before calling
 	
 	sw $ra 0($sp)
 	
@@ -88,6 +88,7 @@ init_student_array:
 			beqz $t7, update_name_pointer  # If null terminator go to update update pointer
 			addi $t5, $t5, 1  # Increment name pointer
 			j name_loop       # Continue loop
+			
 		update_name_pointer:
 			addi $t5, $t5, 1  # Move past null terminator
 		
@@ -95,10 +96,95 @@ init_student_array:
 	end:
 		lw $ra 0($sp) # storing back the stack
 		addi $sp, $sp, 4
+		
 		jr $ra		
 	
 insert:
-	jr $ra
+     	
+    	lw $t0, 0($a0)                # Load the first 32 bits of the student record
+    	srl $t0, $t0, 10              # Extract the student ID (shift right by 10 bits)
+    	
+    	move $t1, $a1                 # Copy the hash table base address
+    	
+    	move $t2 $a2 		       # Getting the table size
+    	
+    	divu $t0 $t2 # dividng to do linear probing
+    	mfhi $t3 # storing number after modulo in t4
+    	
+    	li $t4 0 # traversel for probing
+    	
+    	loop:
+    		bge $t4 $t2 out # getting out if exceeded basically when my $t4 goes out
+    		
+    		lw $t5 0($t1) # getting the id of that position
+    		
+    		srl $t5 $t5 10 # right shift to set proper
+    		
+    		beq $t4 $t3 got # once I get the hash table ID it means I can check now
+    		
+    		addi $t4 $t4 1 # continue the loop
+    		
+    		addi $t1 $t1 4 # adding by 8 to reach next hash tble element
+    		
+    		j loop
+    		
+    	got:
+    		beqz $t5 canPlace # if hash table id 0 then canPlace
+    		li $t6 -1
+    		beq $t5 $t6 canPlace # if hash table id null then canPlace
+
+    		li $t7 1 # counter number of values now stored
+    		
+    		addi $t4 $t4 1 # continue the loopAgain
+    		
+    		addi $t1 $t1 4 # adding by 4 to reach next hash tble element
+    		
+    		#ble $t7 $t2 do # checking again to see If we can place
+    		
+    		loopAgain:
+    			bge $t7 $t2 out # going our if count becomes equal to table size
+    			
+    			lw $t5 0($t1) # getting the id of that position
+    			
+    			beqz $t5 canPlace # if hash table id 0 then canPlace
+    			li $t6 -1
+    			beq $t5 $t6 canPlace # if hash table id null then canPlace
+    		
+    			addi $t1 $t1 4 # adding by 4 to reach next hash tble element
+    			addi $t7 $t7 1 # adding by 1 to reach new counter counting elements we checked
+    			addi $t4 $t4 1 # adding by 1 to reach next hash tble elementprevious counter for seeing if we reach end of loop
+    			beq $t4 $t2 do # calling function again to ste values again
+    			
+    		j loopAgain
+    		
+    	
+    		
+    	do:
+    		beq $t7 $t2 out # get out directly if equal table size
+    		
+    		addi $t4 $t4 1 # continue the loopAgain
+    		
+    		addi $t2 $t2 4 # adding by 4 to reach next hash tble element
+    			
+    		move $t1, $a1 # Copy the hash table base address
+    			
+    		li $t4 0 # making varibale 0 again
+    			  		
+    		
+    		
+    		
+    	canPlace:
+    		sw $a0 0($t1) # storing in hash
+    		j correct
+    	
+    	correct:
+    		move $v0 $t4 # stroing the index 
+    		jr $ra
+    	out:
+    		li $v0 -1 # nothing stored so -1
+    		jr $ra
+	
+    	
 	
 search:
 	jr $ra
