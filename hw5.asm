@@ -139,6 +139,8 @@ insert:
     		
     		addi $t1 $t1 4 # adding by 4 to reach next hash tble element
     		
+    		beq $t4 $t2 do # setting first if reached last 
+    		
     		
     		loopAgain:
     			bge $t7 $t2 out # going our if count becomes equal to table size
@@ -228,13 +230,15 @@ search:
     		 
     		li $t6 1 # counter number of values now stored
     		
+    		beq $t3 $t2 onceMore # setting first if reached last 
+    		
     		loopOneMore:
     			li $t7 -1
     			
     			bge $t6 $t2 loopOut # going our if count becomes equal to table size
     			lw $t4 0($t1) # getting the id of that position
-    			beqz $t4 loopOut
     			beq $t4 $t7 moving
+    			beqz $t4 loopOut
     			
     			lw $t4 0($t4) # loading t4
     		
@@ -273,4 +277,41 @@ search:
     		jr $ra
 
 delete:
+	addi $sp $sp -4 # making stack
+	sw $ra 0($sp)
+	
+	jal search
+	
+	move $t0 $v0 # storing the record
+	
+	move $t1 $v1 # storing the index
+	
+	li $t2 -1
+	
+	beq $t1 $t2 pushOut # go out
+	
+	li $t3 0 # looping over then
+	move $t4 $a1 # table load
+	forLoop:
+		beq $t3 $t1 comeOut
+		
+		addi $t3 $t3 1 # loop ahead
+		
+		addi $t4 $t4 4
+		
+		j forLoop
+		
+	comeOut:
+		sw $t2 0($t4) # storing word with -1 making it tobstone
+		move $v0 $t3 # storing index
+		
+		j exit
+	
+	pushOut:
+	move $v0 $t2 # did not get anything hence -1
+	j exit
+	
+	exit:
+	lw $ra 0($sp) # getting stack back
+	addi $sp $sp 4
 	jr $ra
