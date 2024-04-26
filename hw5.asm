@@ -139,7 +139,6 @@ insert:
     		
     		addi $t1 $t1 4 # adding by 4 to reach next hash tble element
     		
-    		#ble $t7 $t2 do # checking again to see If we can place
     		
     		loopAgain:
     			bge $t7 $t2 out # going our if count becomes equal to table size
@@ -160,34 +159,118 @@ insert:
     	
     		
     	do:
-    		beq $t7 $t2 out # get out directly if equal table size
+    		beq $t7 $t2 out
     		
-    		addi $t4 $t4 1 # continue the loopAgain
+    		#addi $t4 $t4 1 # continue the loopAgain
     		
-    		addi $t2 $t2 4 # adding by 4 to reach next hash tble element
+    		#addi $t2 $t2 4 # adding by 4 to reach next hash tble element
     			
     		move $t1, $a1 # Copy the hash table base address
     			
-    		li $t4 0 # making varibale 0 again
+    		li $t4 0 # mking varibale 0 again
+    		
+    		j loopAgain
+    		
     			  		
-    		
-    		
-    		
     	canPlace:
     		sw $a0 0($t1) # storing in hash
     		j correct
     	
     	correct:
-    		move $v0 $t4 # stroing the index 
+    		move $v0 $t4 # moving to set v0 to return the index
     		jr $ra
     	out:
-    		li $v0 -1 # nothing stored so -1
+    		li $v0 -1 # nothing could be laced hence -1
     		jr $ra
 	
     	
 	
 search:
-	jr $ra
+	move $t0 $a0 # loading the studnet ID
+	
+	move $t1 $a1 # loading the hash table address
+	
+	move $t2 $a2 # setting table size
+	
+	divu $t0 $t2 # dividing to do linear probing
+	
+    	mfhi $t5 # storing number after modulo in t2
+	
+	li $t3 0 # setting for traversal
+	
+	whileLoop:
+		bge $t3 $t2 loopOut # means whole table size if complete go out
+    		
+    		beq $t3 $t5 found # means we found particular element
+    		
+    		addi $t3 $t3 1 # moving by 1 our counter
+    		
+    		addi $t1 $t1 4 #adding by 4 to move the table as well
+    		 
+    		j whileLoop
+    		
+    	found:
+    		lw $t4 0($t1) # getting the value of that position
+    		li $t7 -1
+    		beq $t4 $t7 skip
+    		beqz $t4 loopOut
+    		lw $t4 0($t4) # loading t4
+    		
+    		srl $t4 $t4 10 # right shift to set proper
+    		
+    		beq $t4 $t0 proper # same ID at same position which means correct
+    		
+    		skip: 
+    		
+    		addi $t3 $t3 1 # moving by 1 our counter
+    		
+    		addi $t1 $t1 4 #adding by 4 to move the table as well
+    		 
+    		li $t6 1 # counter number of values now stored
+    		
+    		loopOneMore:
+    			li $t7 -1
+    			
+    			bge $t6 $t2 loopOut # going our if count becomes equal to table size
+    			lw $t4 0($t1) # getting the id of that position
+    			beqz $t4 loopOut
+    			beq $t4 $t7 moving
+    			
+    			lw $t4 0($t4) # loading t4
+    		
+    			srl $t4 $t4 10 # right shift to set proper
+    			
+    			beq $t4 $t0 proper # same ID at same position which means correct 
+    			
+    			moving:
+    			addi $t1 $t1 4 # adding by 4 to reach next hash tble element
+    			addi $t6 $t6 1 # adding by 1 to reach new counter counting elements we checked
+    			addi $t3 $t3 1 # adding by 1 to reach next hash tble elementprevious counter for seeing if we reach end of loop
+    			beq $t3 $t2 onceMore # calling function again to ste values again
+    			j loopOneMore
+    		
+    		
+    		
+    	onceMore:
+    		bge $t6 $t2 loopOut
+    			
+    		move $t1, $a1 # Copy the hash table base address
+    			
+    		li $t3 0 # making varibale 0 again
+    		
+    		j loopOneMore
+    	
+    	
+    	proper:
+    		lw $v0 0($t1) # loading that address
+    		move $v1 $t3 # loading that element index
+    		jr $ra
+    		
+    	loopOut:
+    		li $v0 0
+    		li $v1 -1
+    		
+    		jr $ra
 
 delete:
 	jr $ra
